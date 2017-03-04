@@ -24,12 +24,12 @@ public class Asteroids extends Applet implements Runnable, KeyListener
     //toggle for drawing bounding boxes
     boolean showBounds = false;
     //create the asteroid array
-    inst ASTEROIDS = 20;
-    Asteroid[] ast = new Asteroid[ASTEROIDS]
+    int ASTEROIDS = 20;
+    Asteroid[] ast = new Asteroid[ASTEROIDS];
     //create the bullet array
-    int bullets = 10;
+    int BULLETS = 10;
     Bullet[] bullet = new Bullet[BULLETS];
-    int currentBullet = 0
+    int currentBullet = 0;
     //the player's ship
     Ship ship = new Ship();
     //create the identity transform(0,0)
@@ -69,9 +69,9 @@ public class Asteroids extends Applet implements Runnable, KeyListener
     public void update(Graphics g)
     {
         //start of transforms at identity
-        g2d.setTransform(identity)
+        g2d.setTransform(identity);
         //erase the background
-        g2d.setPaint(Color.BLACK)
+        g2d.setPaint(Color.BLACK);
         g2d.fillRect(0,0,getSize().width,getSize().height);
         //print some status information
         g2d.setColor(Color.WHITE);
@@ -88,7 +88,7 @@ public class Asteroids extends Applet implements Runnable, KeyListener
     //drawShip called by applet update event
     public void drawShip()
     {
-        g2d.setTransformation(identity);
+        g2d.setTransform(identity);
         g2d.translate(ship.getX(),ship.getY());
         g2d.rotate(Math.toRadians(ship.getFaceAngle()));
         g2d.setColor(Color.ORANGE);
@@ -102,7 +102,7 @@ public class Asteroids extends Applet implements Runnable, KeyListener
             if(bullet[n].isAlive())
             {
                 //draw the bullet
-                g2d.setTransform(idenity);
+                g2d.setTransform(identity);
                 g2d.translate(bullet[n].getX(),bullet[n].getY());
                 g2d.setColor(Color.MAGENTA);
                 g2d.draw(bullet[n].getShape());
@@ -130,5 +130,212 @@ public class Asteroids extends Applet implements Runnable, KeyListener
     public void paint(Graphics g)
     {
         g.drawImage(backbuffer,0,0,this);
+    }
+    //thread start even - start the game loop running
+    public void start()
+    {
+        //create the gameloop thread for real-time updates
+        gameloop = new Thread(this);
+        gameloop.start();
+    }
+    //thread run event (game loop)
+    public void run()
+    {
+        //aquire the current thread
+        Thread t = Thread.currentThread();
+        //keep going as long as the thread is alive
+        while(t==gameloop)
+        {
+            try
+            {
+                //update the gameloop
+                gameUpdate();
+                //target framerate is 50fps
+                Thread.sleep(20);
+            }
+            catch(InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            repaint();
+            }
+    }
+    public void stop()
+    {
+            //kill the gameloop thread
+            gameloop = null;
+    }
+    //move and animate the objects inthe game
+    private void gameUpdate()
+    {
+        updateShip();
+        updateBullets();
+        updateAsteroids();
+        checkCollisions();
+    }
+    //Update the ship's position based on veolcity
+    public void updateShip()
+    {
+        ship.incX(ship.getVelX());
+        //wrap around left/right
+        if(ship.getX() < -10)
+        {
+            ship.setX(getSize().width+10);
+        }
+        else if(ship.getX() > getSize().width + 10)
+        {
+            ship.setX(-10);
+        }
+        //update ships Y position
+        ship.incY(ship.getVelY());
+        //wrap around top/bottom
+        if(ship.getY()< -10)
+        {
+            ship.setY(getSize().height+10);
+        }
+        else if(ship.getY()>getSize().height+10)
+        {
+            ship.setY(-10);
+        }
+    }
+    public void updateBullets()
+    {
+        for(int n = 0; n<BULLETS; n++)
+        {
+            if(bullet[n].isAlive())
+            {
+                bullet[n].incX(bullet[n].getVelX());
+                if(bullet[n].getX()<0||bullet[n].getX()>getSize().width)
+                {
+                    bullet[n].setAlive(false);
+                }
+                bullet[n].incY(bullet[n].getVelY());
+                if(bullet[n].getY()<0||bullet[n].getY()>getSize().height)
+                {
+                    bullet[n].setAlive(false);
+                }
+            }
+        }
+    }
+    public void updateAsteroids()
+    {
+        for(int n = 0; n < ASTEROIDS; n++)
+        {
+            if(ast[n].isAlive())
+            {
+                ast[n].incX(ast[n].getVelX());
+                if(ast[n].getX()<-20)
+                {
+                    ast[n].setX(getSize().width+20);
+                }
+                else if(ast[n].getX()>getSize().width+20)
+                {
+                    ast[n].setX(-20);
+                }
+                ast[n].incY(ast[n].getVelY());
+                if(ast[n].getY()<-20)
+                {
+                    ast[n].setY(getSize().height+20);
+                }
+                else if(ast[n].getY()>getSize().height+20)
+                {
+                    ast[n].setY(-20);
+                }
+                ast[n].incMoveAngle(ast[n].getRotationVelocity());
+                if(ast[n].getMoveAngle()<0)
+                {
+                    ast[n].setMoveAngle(360-ast[n].getRotationVelocity());
+                }
+                else if(ast[n].getMoveAngle()>360)
+                {
+                    ast[n].setMoveAngle(ast[n].getRotationVelocity());
+                }
+            }
+        }
+    }
+    public void checkCollisions()
+    {
+        for(int m=0; m<ASTEROIDS;m++)
+        {
+            if(ast[m].isAlive())
+            {
+                for(int n = 0; n<BULLETS;n++)
+                {
+                    if(bullet[n].isAlive())
+                    {
+                        if(ast[m].getBounds().contains(bullet[n].getX(),bullet[n].getY()))
+                        {
+                            bullet[n].setAlive(false);
+                            ast[m].setAlive(false);
+                            continue;
+                        }
+                    }
+                }
+            }
+            if(ast[m].getBounds().intersects(ship.getBounds()))
+            {
+                ast[m].setAlive(false);
+                ship.setX(320);
+                ship.setY(240);
+                ship.setFaceAngle(0);
+                ship.setVelX(0);
+                ship.setVelY(0);
+                continue;
+            }
+        }
+    }
+    public void keyReleased(KeyEvent k){}
+    public void keyTyped(KeyEvent k){}
+    public void keyPressed(KeyEvent k)
+    {
+        int keyCode = k.getKeyCode();
+        switch(keyCode)
+        {
+            case KeyEvent.VK_LEFT:
+                ship.incFaceAngle(-5);
+                if(ship.getFaceAngle()<0)
+                {
+                    ship.setFaceAngle(355);
+                }
+                break;
+            case KeyEvent.VK_RIGHT:
+                ship.incFaceAngle(5);
+                if(ship.getFaceAngle()>360)
+                {
+                    ship.setFaceAngle(5);
+                }
+                break;
+            case KeyEvent.VK_UP:
+                ship.setMoveAngle(ship.getFaceAngle()-90);
+                ship.incVelX(calcAngleMoveX(ship.getMoveAngle())*0.1);
+                ship.incVelY(calcAngleMoveY(ship.getMoveAngle())*0.1);
+                break;
+            case KeyEvent.VK_CONTROL:
+            case KeyEvent.VK_ENTER:
+            case KeyEvent.VK_SPACE:
+                currentBullet++;
+                if(currentBullet>BULLETS-1)
+                {
+                    currentBullet=0;
+                    bullet[currentBullet].setAlive(true);
+                }
+                bullet[currentBullet].setX(ship.getX());
+                bullet[currentBullet].setY(ship.getY());
+                bullet[currentBullet].setMoveAngle(ship.getFaceAngle()-90);
+                double angle = bullet[currentBullet].getMoveAngle();
+                double svx = ship.getVelX();
+                double svy = ship.getVelY();
+                bullet[currentBullet].setVelX(svx+calcAngleMoveX(angle*2));
+                bullet[currentBullet].setVelY(svy+calcAngleMoveY(angle*2));
+                break;
+        }
+    }
+    public double calcAngleMoveX(double angle)
+    {
+        return (double)(Math.cos(angle*Math.PI/180));
+    }
+    public double calcAngleMoveY(double angle)
+    {
+        return (double)(Math.sin(angle*Math.PI/180));
     }
 }

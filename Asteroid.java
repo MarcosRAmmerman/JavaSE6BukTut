@@ -9,13 +9,13 @@ public class Asteroid extends BaseVectorShape{
   //rotation speed
   protected double rotVel;
   public double getRotationVelocity(){return rotVel;}
-  public void setRotationalVelocity(double v){rotVel = v;}
+  public void setRotationVelocity(double v){rotVel = v;}
   
   //bounding rectagle
   public Rectangle getBounds(){
     Rectangle r;
     r = new Rectangle((int)getX() - 20, (int)getY() - 20,40,40);
-    return r
+    return r;
   }
   
   //CONSTRUCTOR

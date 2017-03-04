@@ -6,19 +6,19 @@ public class BaseVectorShape
   private boolean alive;
   private double x, y;
   private double velX, velY;
-  private moveAngle, faceAngle;
+  private double moveAngle, faceAngle;
   //Accessor methods
   public  Shape getShape(){return shape;}
   public boolean isAlive() {return alive;}
-  public double getX(){return x};
-  public double getY(){return y};
-  public double getVelX(){return velY};
-  public double getVelY(){return velY};
-  public double getMoveAngle(){return moveAngle};
-  public double getFaceAngle(){return faceAngle};
+  public double getX(){return x;}
+  public double getY(){return y;}
+  public double getVelX(){return velY;}
+  public double getVelY(){return velY;}
+  public double getMoveAngle(){return moveAngle;}
+  public double getFaceAngle(){return faceAngle;}
   
   //mutators
-  public void setshape(Shape shape){this.shape=shape;}
+  public void setShape(Shape shape){this.shape=shape;}
   public void setAlive(boolean alive){this.alive=alive;}
   
   public void setX(double x){this.x=x;}
